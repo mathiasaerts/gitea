@@ -441,6 +441,25 @@ func (err ErrAccessTokenEmpty) Error() string {
 	return fmt.Sprintf("access token is empty")
 }
 
+
+// ErrAccessTokenAccessDenied represents a "AccessTokenAccessDenied" kind of Error.
+type ErrAccessTokenAccessDenied struct {
+	UserID int64
+	TokenID int64
+}
+
+// IsErrAccessTokenAccessDenied checks if an error is a ErrAccessTokenAccessDenied.
+func IsErrAccessTokenAccessDenied(err error) bool {
+	_, ok := err.(ErrAccessTokenAccessDenied)
+	return ok
+}
+
+// Error pretty-prints an error of type ErrAccessTokenAccessDenied.
+func (err ErrAccessTokenAccessDenied) Error() string {
+	return fmt.Sprintf("user does not have access to the access token [user_id: %d, token_id: %d]",
+		err.UserID, err.TokenID)
+}
+
 // ________                            .__                __  .__
 // \_____  \_______  _________    ____ |__|____________ _/  |_|__| ____   ____
 //  /   |   \_  __ \/ ___\__  \  /    \|  \___   /\__  \\   __\  |/  _ \ /    \

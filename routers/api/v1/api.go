@@ -508,6 +508,11 @@ func RegisterRoutes(m *macaron.Macaron) {
 					m.Post("/keys", bind(api.CreateKeyOption{}), admin.CreatePublicKey)
 					m.Post("/orgs", bind(api.CreateOrgOption{}), admin.CreateOrg)
 					m.Post("/repos", bind(api.CreateRepoOption{}), admin.CreateRepo)
+					m.Group("/tokens", func() {
+						m.Combo("").Get(admin.ListAccessTokens).
+							Post(bind(api.CreateAccessTokenOption{}), admin.CreateAccessToken).
+							Delete(admin.DeleteAccessToken)
+					}, reqBasicAuth())
 				})
 			})
 		}, reqAdmin())

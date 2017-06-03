@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package user
+package admin
 
 import (
 	api "code.gitea.io/sdk/gitea"
@@ -14,7 +14,7 @@ import (
 
 // ListAccessTokens list all the access tokens
 func ListAccessTokens(ctx *context.APIContext) {
-	// swagger:route GET /user/tokens userGetTokens
+	// swagger:route GET /admin/users/{username}/tokens userGetTokens
 	//
 	//     Produces:
 	//     - application/json
@@ -23,7 +23,17 @@ func ListAccessTokens(ctx *context.APIContext) {
 	//       200: AccessTokenList
 	//       500: error
 
-	tokens, err := models.ListAccessTokens(ctx.User.ID)
+	u, err := models.GetUserByName(ctx.Params(":username"))
+	if err != nil {
+		if models.IsErrUserNotExist(err) {
+			ctx.Status(404)
+		} else {
+			ctx.Error(500, "GetUserByName", err)
+		}
+		return
+	}
+
+	tokens, err := models.ListAccessTokens(u.ID)
 	if err != nil {
 		ctx.Error(500, "ListAccessTokens", err)
 		return
@@ -42,7 +52,7 @@ func ListAccessTokens(ctx *context.APIContext) {
 
 // CreateAccessToken create access tokens
 func CreateAccessToken(ctx *context.APIContext, form api.CreateAccessTokenOption) {
-	// swagger:route POST /user/tokens userCreateToken
+	// swagger:route POST /admin/users/{username}/tokens userCreateToken
 	//
 	//     Consumes:
 	//     - application/json
@@ -54,8 +64,18 @@ func CreateAccessToken(ctx *context.APIContext, form api.CreateAccessTokenOption
 	//       200: AccessToken
 	//       500: error
 
+	u, err := models.GetUserByName(ctx.Params(":username"))
+	if err != nil {
+		if models.IsErrUserNotExist(err) {
+			ctx.Status(404)
+		} else {
+			ctx.Error(500, "GetUserByName", err)
+		}
+		return
+	}
+
 	t := &models.AccessToken{
-		UID:  ctx.User.ID,
+		UID:  u.ID,
 		Name: form.Name,
 	}
 	if err := models.NewAccessToken(t); err != nil {
@@ -71,7 +91,7 @@ func CreateAccessToken(ctx *context.APIContext, form api.CreateAccessTokenOption
 
 //DeleteAccessToken remove access tokens
 func DeleteAccessToken(ctx *context.APIContext) {
-	// swagger:route DELETE /user/tokens/{id} userDeleteAccessToken
+	// swagger:route DELETE /admin/users/{username}/tokens/{id} userDeleteAccessToken
 	//
 	//     Consumes:
 	//     - application/json
@@ -84,7 +104,17 @@ func DeleteAccessToken(ctx *context.APIContext) {
 	//       403: forbidden
 	//       500: error
 
-	if err := models.DeleteAccessTokenByID(ctx.ParamsInt64(":id"), ctx.User.ID); err != nil {
+	u, err := models.GetUserByName(ctx.Params(":username"))
+	if err != nil {
+		if models.IsErrUserNotExist(err) {
+			ctx.Status(404)
+		} else {
+			ctx.Error(500, "GetUserByName", err)
+		}
+		return
+	}
+
+	if err := models.DeleteAccessTokenByID(ctx.ParamsInt64(":id"), u.ID); err != nil {
 		if models.IsErrAccessTokenAccessDenied(err) {
 			ctx.Error(403, "", "You do not have access to this token")
 		} else {
