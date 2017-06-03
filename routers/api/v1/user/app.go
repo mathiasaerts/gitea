@@ -9,11 +9,12 @@ import (
 
 	"code.gitea.io/gitea/models"
 	"code.gitea.io/gitea/modules/context"
+	"code.gitea.io/gitea/routers/user"
 )
 
 // ListAccessTokens list all the access tokens
 func ListAccessTokens(ctx *context.APIContext) {
-	// swagger:route GET /users/{username}/tokens userGetTokens
+	// swagger:route GET /user/tokens userGetTokens
 	//
 	//     Produces:
 	//     - application/json
@@ -40,7 +41,7 @@ func ListAccessTokens(ctx *context.APIContext) {
 
 // CreateAccessToken create access tokens
 func CreateAccessToken(ctx *context.APIContext, form api.CreateAccessTokenOption) {
-	// swagger:route POST /users/{username} /tokens userCreateToken
+	// swagger:route POST /user/tokens userCreateToken
 	//
 	//     Consumes:
 	//     - application/json

@@ -20,15 +20,16 @@ func BasicAuthEncode(user, pass string) string {
 // AccessToken represents a API access token.
 // swagger:response AccessToken
 type AccessToken struct {
+	ID int64 `json: "id"`
 	Name string `json:"name"`
 	Sha1 string `json:"sha1"`
 }
 
 // AccessTokenList represents a list of API access token.
 // swagger:response AccessTokenList
-type AccessTokenList []*AccessToken 
+type AccessTokenList []*AccessToken
 
-// ListAccessTokens lista all the access tokens of user
+// ListAccessTokens list all the access tokens of user
 func (c *Client) ListAccessTokens(user, pass string) ([]*AccessToken, error) {
 	tokens := make([]*AccessToken, 0, 10)
 	return tokens, c.getParsedResponse("GET", fmt.Sprintf("/users/%s/tokens", user),
