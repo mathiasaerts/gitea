@@ -9,7 +9,6 @@ import (
 
 	"code.gitea.io/gitea/models"
 	"code.gitea.io/gitea/modules/context"
-	"code.gitea.io/gitea/routers/user"
 )
 
 // ListAccessTokens list all the access tokens
