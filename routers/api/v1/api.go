@@ -320,9 +320,10 @@ func RegisterRoutes(m *macaron.Macaron) {
 				Post(bind(api.CreateRepoOption{}), repo.Create)
 
 			m.Group("/tokens", func() {
-				m.Combo("").Get(user.ListAccessTokens).
-					Post(bind(api.CreateAccessTokenOption{}), user.CreateAccessToken).
-					Delete(user.DeleteAccessToken)
+				m.Combo("").
+					Get(user.ListAccessTokens).
+					Post(bind(api.CreateAccessTokenOption{}), user.CreateAccessToken)
+				m.Delete("/:id", user.DeleteAccessToken)
 			})
 
 			m.Group("/starred", func() {
@@ -510,8 +511,8 @@ func RegisterRoutes(m *macaron.Macaron) {
 					m.Post("/repos", bind(api.CreateRepoOption{}), admin.CreateRepo)
 					m.Group("/tokens", func() {
 						m.Combo("").Get(admin.ListAccessTokens).
-							Post(bind(api.CreateAccessTokenOption{}), admin.CreateAccessToken).
-							Delete(admin.DeleteAccessToken)
+							Post(bind(api.CreateAccessTokenOption{}), admin.CreateAccessToken)
+						m.Delete("/:id", admin.DeleteAccessToken)
 					}, reqBasicAuth())
 				})
 			})

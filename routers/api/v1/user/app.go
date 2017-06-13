@@ -72,15 +72,13 @@ func CreateAccessToken(ctx *context.APIContext, form api.CreateAccessTokenOption
 func DeleteAccessToken(ctx *context.APIContext) {
 	// swagger:route DELETE /user/tokens/{id} userDeleteAccessToken
 	//
-	//     Consumes:
-	//     - application/json
-	//
 	//     Produces:
 	//     - application/json
 	//
 	//     Responses:
 	//       204: empty
 	//       403: forbidden
+	//       404: not found
 	//       500: error
 
 	if err := models.DeleteAccessTokenByID(ctx.ParamsInt64(":id"), ctx.User.ID); err != nil {

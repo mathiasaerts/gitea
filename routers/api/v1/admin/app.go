@@ -92,9 +92,6 @@ func CreateAccessToken(ctx *context.APIContext, form api.CreateAccessTokenOption
 func DeleteAccessToken(ctx *context.APIContext) {
 	// swagger:route DELETE /admin/users/{username}/tokens/{id} userDeleteAccessToken
 	//
-	//     Consumes:
-	//     - application/json
-	//
 	//     Produces:
 	//     - application/json
 	//
