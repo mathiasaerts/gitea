@@ -174,6 +174,11 @@ var (
 			FileMaxSize  int64
 			MaxFiles     int
 		} `ini:"-"`
+
+		// Repository local settings
+		Local struct {
+			LocalCopyPath string
+		} `ini:"-"`
 	}{
 		AnsiCharset:            "",
 		ForcePrivate:           false,
@@ -205,6 +210,13 @@ var (
 			AllowedTypes: []string{},
 			FileMaxSize:  3,
 			MaxFiles:     5,
+		},
+
+		// Repository local settings
+		Local: struct {
+			LocalCopyPath string
+		}{
+			LocalCopyPath: "tmp/local-repo",
 		},
 	}
 	RepoRootPath string
@@ -887,6 +899,8 @@ please consider changing to GITEA_CUSTOM`)
 		log.Fatal(4, "Failed to map Repository.Editor settings: %v", err)
 	} else if err = Cfg.Section("repository.upload").MapTo(&Repository.Upload); err != nil {
 		log.Fatal(4, "Failed to map Repository.Upload settings: %v", err)
+	} else if err = Cfg.Section("repository.local").MapTo(&Repository.Local); err != nil {
+		log.Fatal(4, "Failed to map Repository.Local settings: %v", err)
 	}
 
 	if !filepath.IsAbs(Repository.Upload.TempPath) {
@@ -1238,11 +1252,11 @@ func newSessionService() {
 // Mailer represents mail service.
 type Mailer struct {
 	// Mailer
-	QueueLength           int
-	Name                  string
-	From                  string
-	FromEmail             string
-	EnableHTMLAlternative bool
+	QueueLength     int
+	Name            string
+	From            string
+	FromEmail       string
+	SendAsPlainText bool
 
 	// SMTP sender
 	Host              string
@@ -1271,9 +1285,9 @@ func newMailService() {
 	}
 
 	MailService = &Mailer{
-		QueueLength: sec.Key("SEND_BUFFER_LEN").MustInt(100),
-		Name:        sec.Key("NAME").MustString(AppName),
-		EnableHTMLAlternative: sec.Key("ENABLE_HTML_ALTERNATIVE").MustBool(),
+		QueueLength:     sec.Key("SEND_BUFFER_LEN").MustInt(100),
+		Name:            sec.Key("NAME").MustString(AppName),
+		SendAsPlainText: sec.Key("SEND_AS_PLAIN_TEXT").MustBool(false),
 
 		Host:           sec.Key("HOST").String(),
 		User:           sec.Key("USER").String(),
@@ -1289,6 +1303,11 @@ func newMailService() {
 		SendmailPath: sec.Key("SENDMAIL_PATH").MustString("sendmail"),
 	}
 	MailService.From = sec.Key("FROM").MustString(MailService.User)
+
+	if sec.HasKey("ENABLE_HTML_ALTERNATIVE") {
+		log.Warn("ENABLE_HTML_ALTERNATIVE is deprecated, use SEND_AS_PLAIN_TEXT")
+		MailService.SendAsPlainText = !sec.Key("ENABLE_HTML_ALTERNATIVE").MustBool(false)
+	}
 
 	parsed, err := mail.ParseAddress(MailService.From)
 	if err != nil {

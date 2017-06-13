@@ -14,6 +14,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -59,13 +60,21 @@ func TestMain(m *testing.M) {
 }
 
 func initIntegrationTest() {
-	if setting.CustomConf = os.Getenv("GITEA_CONF"); setting.CustomConf == "" {
-		fmt.Println("Environment variable $GITEA_CONF not set")
-		os.Exit(1)
-	}
-	if os.Getenv("GITEA_ROOT") == "" {
+	giteaRoot := os.Getenv("GITEA_ROOT")
+	if giteaRoot == "" {
 		fmt.Println("Environment variable $GITEA_ROOT not set")
 		os.Exit(1)
+	}
+	setting.AppPath = path.Join(giteaRoot, "gitea")
+
+	giteaConf := os.Getenv("GITEA_CONF")
+	if giteaConf == "" {
+		fmt.Println("Environment variable $GITEA_CONF not set")
+		os.Exit(1)
+	} else if !path.IsAbs(giteaConf) {
+		setting.CustomConf = path.Join(giteaRoot, giteaConf)
+	} else {
+		setting.CustomConf = giteaConf
 	}
 
 	setting.NewContext()
@@ -147,22 +156,20 @@ func (s *TestSession) MakeRequest(t *testing.T, req *http.Request) *TestResponse
 }
 
 func loginUser(t *testing.T, userName, password string) *TestSession {
-	req, err := http.NewRequest("GET", "/user/login", nil)
-	assert.NoError(t, err)
+	req := NewRequest(t, "GET", "/user/login")
 	resp := MakeRequest(req)
 	assert.EqualValues(t, http.StatusOK, resp.HeaderCode)
 
 	doc, err := NewHtmlParser(resp.Body)
 	assert.NoError(t, err)
 
-	req, err = http.NewRequest("POST", "/user/login",
+	req = NewRequestBody(t, "POST", "/user/login",
 		bytes.NewBufferString(url.Values{
 			"_csrf":     []string{doc.GetInputValueByName("_csrf")},
 			"user_name": []string{userName},
 			"password":  []string{password},
 		}.Encode()),
 	)
-	assert.NoError(t, err)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp = MakeRequest(req)
 	assert.EqualValues(t, http.StatusFound, resp.HeaderCode)
@@ -202,6 +209,17 @@ type TestResponse struct {
 	HeaderCode int
 	Body       []byte
 	Headers    http.Header
+}
+
+func NewRequest(t *testing.T, method, url string) *http.Request {
+	return NewRequestBody(t, method, url, nil)
+}
+
+func NewRequestBody(t *testing.T, method, url string, body io.Reader) *http.Request {
+	request, err := http.NewRequest(method, url, body)
+	assert.NoError(t, err)
+	request.RequestURI = url
+	return request
 }
 
 func MakeRequest(req *http.Request) *TestResponse {
